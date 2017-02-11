@@ -3,6 +3,10 @@
     <head>
         <title>Minesweeper</title>
         <style type="text/css">
+            #mines {
+                cursor: default
+            }
+
             td {
                 width: 18px;
                 height: 18px;
@@ -39,12 +43,11 @@
         </style>
     </head>
 <body>
-    <table id="mines"></table>
+    <table id="mines" unselectable="on"></table>
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
     <script type="text/javascript">
         /* TODO:
-        * double-click number with flags
         * flag counter
         * win
         * lose
@@ -58,7 +61,7 @@
 
         const rows = 20;
         const cols = 30;
-        const mines = 25;
+        const mines = 80;
         var state;
 
         const FLAG = Object.freeze({
@@ -195,22 +198,42 @@
             });
 
             $('td', '#mines').mouseup(function (event) {
-                if (event.which === 1) {
-                    activate($(this));
-                }
-                else {
-                    const mineid = $(this).attr('data-mineid');
-                    if (!state.isClicked(mineid)) {
+                const mineid = $(this).attr('data-mineid');
+                if (!state.isClicked(mineid)) {
+                    if (event.which === 1) {
+                        activate($(this));
+                    }
+                    else {
                         const flag = state.toggleFlag(mineid);
                         $(this).html(flag ? flag.icon : '');
                     }
                 }
             });
 
-            $('#mines').bind('contextmenu', function(e){
-                return false;
+            $('td', '#mines').dblclick(function () {
+                const id = $(this).attr('data-mineid');
+                if (state.isClicked(id)) {
+                    const adjacent = getAdjacent(id);
+
+                    const adjMines = adjacent.filter(function (a) {
+                        return state.isMine(a);
+                    }).length;
+                    const adjFlags = adjacent.filter(function (a) {
+                        return state.getFlag(a) === FLAG.SET;
+                    }).length;
+
+                    if (adjFlags && adjFlags === adjMines) {
+                        adjacent.forEach(function (a) {
+                           if (!state.getFlag(a)) {
+                               activate($('td[data-mineid=' + a + ']'));
+                           }
+                        });
+                    }
+                }
             });
 
+            $('#mines').on('contextmenu', false);
+            $('#mines').on('selectstart', false);
         });
     </script>
 </body>
