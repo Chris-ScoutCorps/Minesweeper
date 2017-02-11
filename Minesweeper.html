@@ -43,10 +43,28 @@
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
     <script type="text/javascript">
+        /* TODO:
+        * double-click number with flags
+        * flag counter
+        * win
+        * lose
+        * restart / settings
+        *
+        * probabilities + show/hide
+        *
+        * color numbers
+        * add icons
+        */
+
         const rows = 20;
         const cols = 30;
         const mines = 25;
         var state;
+
+        const FLAG = Object.freeze({
+            SET: { icon: '>' },
+            QUESTION: { icon: '?' }
+        });
 
         function series(len) {
             var a = [];
@@ -55,7 +73,7 @@
             return a;
         }
 
-        const MineID = {
+        const MineID = Object.freeze({
             get: function (row, col) {
                 return row + '-' + col;
             },
@@ -66,7 +84,7 @@
                     col: parseInt(s[1])
                 }
             }
-        };
+        });
 
         function getRandomMine() {
             return MineID.get(
@@ -97,9 +115,11 @@
                     return clicked[id] || false;
                 },
                 toggleFlag: function (id) {
-                    if (!flags[id]) flags[id] = '>';
-                    else if (flags[id] === '>') flags[id] = '?';
+                    if (!flags[id]) flags[id] = FLAG.SET;
+                    else if (flags[id] === FLAG.SET) flags[id] = FLAG.QUESTION;
                     else delete flags[id];
+
+                    return flags[id] || false;
                 },
                 getFlag: function (id) {
                     return flags[id] || false;
@@ -181,8 +201,8 @@
                 else {
                     const mineid = $(this).attr('data-mineid');
                     if (!state.isClicked(mineid)) {
-                        state.toggleFlag(mineid);
-                        $(this).html(state.getFlag(mineid));
+                        const flag = state.toggleFlag(mineid);
+                        $(this).html(flag ? flag.icon : '');
                     }
                 }
             });
