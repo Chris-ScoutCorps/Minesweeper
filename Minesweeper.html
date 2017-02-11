@@ -1,0 +1,160 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <title>Minesweeper</title>
+        <style type="text/css">
+            td {
+                width: 18px;
+                height: 18px;
+                border-radius: 5px;
+                -moz-border-radius: 5px;
+                -webkit-border-radius: 5px;
+                text-align: center;
+                vertical-align: middle;
+                font-weight: bold;
+                font-size: 15px;
+                line-height: 15px;
+            }
+            td.unclicked {
+                background-color: #ddd;
+                border-top: 1px solid rgba(0,0,0,0.2);
+                border-left: 1px solid rgba(0,0,0,0.2);
+                border-right: 2px solid rgba(0,0,0,0.2);
+                border-bottom: 2px solid rgba(0,0,0,0.2);
+            }
+            td.unclicked:hover {
+                background-color: #ccc;
+                border-color: rgba(0,0,0,0.5);
+            }
+            td.unclicked:active, td.clicked {
+                background-color: #aaa;
+                border-top: 2px solid rgba(0,0,0,0.2);
+                border-left: 2px solid rgba(0,0,0,0.2);
+                border-right: 1px solid rgba(0,0,0,0.2);
+                border-bottom: 1px solid rgba(0,0,0,0.2);
+            }
+            td.mine {
+                background-color: #D11;
+            }
+        </style>
+    </head>
+<body>
+    <table id="mines"></table>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+    <script type="text/javascript">
+        const rows = 20;
+        const cols = 30;
+        const mines = 40;
+        var cfg;
+
+        function series(len) {
+            var a = [];
+            for (var i=0; i<len; i++)
+                a.push(i);
+            return a;
+        }
+
+        function getRandomCoords() {
+            return {
+                row: Math.floor(Math.random() * rows),
+                col: Math.floor(Math.random() * cols)
+            };
+        }
+
+        function getMineId(row, col) {
+            return row + '-' + col;
+        }
+
+        function getMineConfig() {
+            var locations = {};
+            while (Object.keys(locations).length < mines) {
+                var curMine = getRandomCoords();
+                locations[getMineId(curMine.row, curMine.col)] = true;
+            }
+
+            var clicked = {};
+
+            return {
+                locations: locations,
+                clicked: clicked,
+                isMine: function (row, col) {
+                    return locations[getMineId(row, col)] || false;
+                },
+                setClicked: function (row, col) {
+                    clicked[getMineId(row, col)] = true;
+                },
+                isClicked: function (row, col) {
+                    return clicked[getMineId(row, col)] || false;
+                }
+            };
+        }
+        cfg = getMineConfig();
+
+        function getAdjacent(row, col) {
+            return [
+                { row: row - 1, col: col },
+                { row: row - 1, col: col + 1 },
+                { row: row, col: col + 1 },
+                { row: row + 1, col: col + 1 },
+                { row: row + 1, col: col },
+                { row: row + 1, col: col - 1 },
+                { row: row, col: col - 1 },
+                { row: row - 1, col: col - 1 }
+            ].filter(function (x) {
+               return x.row >= 0 && x.col >= 0 && x.row < rows && x.col < cols;
+            });
+        }
+        
+        function activate(square) {
+            square.removeClass('unclicked');
+            cfg.setClicked(square.data('row'), square.data('col'));
+            if (square.data('isMine')) {
+                square.addClass('mine');
+            }
+            else {
+                square.addClass('clicked');
+            }
+
+            const adjacent = getAdjacent(square.data('row'), square.data('col'));
+            const adjMines = adjacent.filter(function (a) {
+                return cfg.isMine(a.row, a.col);
+            }).length;
+
+            if (adjMines) {
+                square.html(adjMines);
+            }
+            else {
+                setTimeout(function () {
+                    adjacent.forEach(function (a) {
+                        if (!cfg.isClicked(a.row, a.col)) {
+                            activate($('td[data-mineid=' + getMineId(a.row, a.col) + ']'));
+                        }
+                    });
+                }, 30);
+            }
+        }
+
+        $(document).ready(function () {
+            series(rows).forEach(function (r) {
+                var row = $('<tr></tr>');
+                series(cols).forEach(function (c) {
+                   var col = $('<td></td>');
+                   col.addClass('unclicked');
+                   col.data('row', r);
+                   col.data('col', c);
+                   col.data('isMine', cfg.isMine(r,c));
+                   col.attr('data-mineid', getMineId(r, c));
+                   row.append(col);
+                });
+                $('#mines').append(row);
+            });
+
+            $('td', '#mines').click(function () {
+                activate($(this));
+            });
+
+        });
+    </script>
+</body>
+</html>
