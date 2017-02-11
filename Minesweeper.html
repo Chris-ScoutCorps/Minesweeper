@@ -45,7 +45,7 @@
     <script type="text/javascript">
         const rows = 20;
         const cols = 30;
-        const mines = 40;
+        const mines = 25;
         var state;
 
         function series(len) {
@@ -82,6 +82,7 @@
             }
 
             var clicked = {};
+            var flags = {};
 
             return {
                 locations: locations,
@@ -94,6 +95,14 @@
                 },
                 isClicked: function (id) {
                     return clicked[id] || false;
+                },
+                toggleFlag: function (id) {
+                    if (!flags[id]) flags[id] = '>';
+                    else if (flags[id] === '>') flags[id] = '?';
+                    else delete flags[id];
+                },
+                getFlag: function (id) {
+                    return flags[id] || false;
                 }
             };
         }
@@ -119,6 +128,10 @@
         
         function activate(square) {
             const id = square.attr('data-mineid');
+
+            if (state.getFlag(id)) {
+                return;
+            }
 
             square.removeClass('unclicked');
             state.setClicked(id);
@@ -161,8 +174,21 @@
                 $('#mines').append(row);
             });
 
-            $('td', '#mines').click(function () {
-                activate($(this));
+            $('td', '#mines').mouseup(function (event) {
+                if (event.which === 1) {
+                    activate($(this));
+                }
+                else {
+                    const mineid = $(this).attr('data-mineid');
+                    if (!state.isClicked(mineid)) {
+                        state.toggleFlag(mineid);
+                        $(this).html(state.getFlag(mineid));
+                    }
+                }
+            });
+
+            $('#mines').bind('contextmenu', function(e){
+                return false;
             });
 
         });
