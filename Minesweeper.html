@@ -46,7 +46,7 @@
         const rows = 20;
         const cols = 30;
         const mines = 40;
-        var cfg;
+        var state;
 
         function series(len) {
             var a = [];
@@ -55,22 +55,30 @@
             return a;
         }
 
-        function getRandomCoords() {
-            return {
-                row: Math.floor(Math.random() * rows),
-                col: Math.floor(Math.random() * cols)
-            };
+        const MineID = {
+            get: function (row, col) {
+                return row + '-' + col;
+            },
+            parse: function (id) {
+                var s = id.split('-');
+                return {
+                    row: parseInt(s[0]),
+                    col: parseInt(s[1])
+                }
+            }
+        };
+
+        function getRandomMine() {
+            return MineID.get(
+                Math.floor(Math.random() * rows),
+                Math.floor(Math.random() * cols)
+            );
         }
 
-        function getMineId(row, col) {
-            return row + '-' + col;
-        }
-
-        function getMineConfig() {
+        function buildState() {
             var locations = {};
-            while (Object.keys(locations).length < mines) {
-                var curMine = getRandomCoords();
-                locations[getMineId(curMine.row, curMine.col)] = true;
+            while (Object.keys(locations).length < mines) { //hash to avoid dupes
+                locations[getRandomMine()] = true;
             }
 
             var clicked = {};
@@ -78,47 +86,52 @@
             return {
                 locations: locations,
                 clicked: clicked,
-                isMine: function (row, col) {
-                    return locations[getMineId(row, col)] || false;
+                isMine: function (id) {
+                    return locations[id] || false;
                 },
-                setClicked: function (row, col) {
-                    clicked[getMineId(row, col)] = true;
+                setClicked: function (id) {
+                    clicked[id] = true;
                 },
-                isClicked: function (row, col) {
-                    return clicked[getMineId(row, col)] || false;
+                isClicked: function (id) {
+                    return clicked[id] || false;
                 }
             };
         }
-        cfg = getMineConfig();
+        state = buildState();
 
-        function getAdjacent(row, col) {
+        function getAdjacent(id) {
+            var p = MineID.parse(id);
             return [
-                { row: row - 1, col: col },
-                { row: row - 1, col: col + 1 },
-                { row: row, col: col + 1 },
-                { row: row + 1, col: col + 1 },
-                { row: row + 1, col: col },
-                { row: row + 1, col: col - 1 },
-                { row: row, col: col - 1 },
-                { row: row - 1, col: col - 1 }
+                { row: p.row - 1, col: p.col },
+                { row: p.row - 1, col: p.col + 1 },
+                { row: p.row, col: p.col + 1 },
+                { row: p.row + 1, col: p.col + 1 },
+                { row: p.row + 1, col: p.col },
+                { row: p.row + 1, col: p.col - 1 },
+                { row: p.row, col: p.col - 1 },
+                { row: p.row - 1, col: p.col - 1 }
             ].filter(function (x) {
                return x.row >= 0 && x.col >= 0 && x.row < rows && x.col < cols;
+            }).map(function (a) {
+                return MineID.get(a.row, a.col);
             });
         }
         
         function activate(square) {
+            const id = square.attr('data-mineid');
+
             square.removeClass('unclicked');
-            cfg.setClicked(square.data('row'), square.data('col'));
-            if (square.data('isMine')) {
+            state.setClicked(id);
+            if (state.isMine(id)) {
                 square.addClass('mine');
             }
             else {
                 square.addClass('clicked');
             }
 
-            const adjacent = getAdjacent(square.data('row'), square.data('col'));
+            const adjacent = getAdjacent(id);
             const adjMines = adjacent.filter(function (a) {
-                return cfg.isMine(a.row, a.col);
+                return state.isMine(a);
             }).length;
 
             if (adjMines) {
@@ -127,11 +140,11 @@
             else {
                 setTimeout(function () {
                     adjacent.forEach(function (a) {
-                        if (!cfg.isClicked(a.row, a.col)) {
-                            activate($('td[data-mineid=' + getMineId(a.row, a.col) + ']'));
+                        if (!state.isClicked(a)) {
+                            activate($('td[data-mineid=' + a + ']'));
                         }
                     });
-                }, 30);
+                }, 15);
             }
         }
 
@@ -141,10 +154,8 @@
                 series(cols).forEach(function (c) {
                    var col = $('<td></td>');
                    col.addClass('unclicked');
-                   col.data('row', r);
-                   col.data('col', c);
-                   col.data('isMine', cfg.isMine(r,c));
-                   col.attr('data-mineid', getMineId(r, c));
+                   var mid = MineID.get(r, c);
+                   col.attr('data-mineid', mid);
                    row.append(col);
                 });
                 $('#mines').append(row);
