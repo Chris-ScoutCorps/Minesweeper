@@ -97,19 +97,19 @@
         }
 
         function buildState() {
-            var locations = {};
-            while (Object.keys(locations).length < mines) { //hash to avoid dupes
-                locations[getRandomMine()] = true;
-            }
-
+            var mineLocations = {};
             var clicked = {};
             var flags = {};
+            var playing = true;
+
+            while (Object.keys(mineLocations).length < mines) { //hash to avoid dupes
+                mineLocations[getRandomMine()] = true;
+            }
 
             return {
-                locations: locations,
-                clicked: clicked,
+                playing: playing,
                 isMine: function (id) {
-                    return locations[id] || false;
+                    return mineLocations[id] || false;
                 },
                 setClicked: function (id) {
                     clicked[id] = true;
@@ -126,6 +126,9 @@
                 },
                 getFlag: function (id) {
                     return flags[id] || false;
+                },
+                didWin: function () {
+                    return Object.keys(clicked).length === ((rows * cols) - mines);
                 }
             };
         }
@@ -160,9 +163,16 @@
             state.setClicked(id);
             if (state.isMine(id)) {
                 square.addClass('mine');
+                displayEnding(false);
+                return;
             }
             else {
                 square.addClass('clicked');
+            }
+
+            if (state.didWin()) {
+                displayEnding(true);
+                return;
             }
 
             const adjacent = getAdjacent(id);
@@ -184,6 +194,25 @@
             }
         }
 
+        function displayEnding(won) {
+            state.playing = false;
+
+            if (!won) {
+                $('td', '#mines').each(function () {
+                    const mineid = $(this).attr('data-mineid');
+                    if (state.isMine(mineid)) {
+                        setTimeout(function () {
+                            $('td[data-mineid=' + mineid + ']').html('*');
+                        }, Math.floor(Math.random() * 500));
+                    }
+                })
+            }
+
+            setTimeout(function () {
+                alert(won ? 'Victory!' : 'Defeat!');
+            }, won ? 100 : 510);
+        }
+
         $(document).ready(function () {
             series(rows).forEach(function (r) {
                 var row = $('<tr></tr>');
@@ -199,7 +228,7 @@
 
             $('td', '#mines').mouseup(function (event) {
                 const mineid = $(this).attr('data-mineid');
-                if (!state.isClicked(mineid)) {
+                if (!state.isClicked(mineid) && state.playing) {
                     if (event.which === 1) {
                         activate($(this));
                     }
@@ -212,7 +241,7 @@
 
             $('td', '#mines').dblclick(function () {
                 const id = $(this).attr('data-mineid');
-                if (state.isClicked(id)) {
+                if (state.isClicked(id) && state.playing) {
                     const adjacent = getAdjacent(id);
 
                     const adjMines = adjacent.filter(function (a) {
