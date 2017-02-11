@@ -7,15 +7,27 @@
                 cursor: default
             }
 
-            td {
-                width: 18px;
-                height: 18px;
+            .button {
+                padding: 8px;
+                margin: 8px;
+            }
+
+            td, .button {
                 border-radius: 5px;
                 -moz-border-radius: 5px;
                 -webkit-border-radius: 5px;
                 text-align: center;
                 vertical-align: middle;
                 font-weight: bold;
+                border-top: 1px solid rgba(0,0,0,0.2);
+                border-left: 1px solid rgba(0,0,0,0.2);
+                border-right: 2px solid rgba(0,0,0,0.2);
+                border-bottom: 2px solid rgba(0,0,0,0.2);
+            }
+
+            td {
+                width: 18px;
+                height: 18px;
                 font-size: 15px;
                 line-height: 15px;
             }
@@ -26,11 +38,11 @@
                 border-right: 2px solid rgba(0,0,0,0.2);
                 border-bottom: 2px solid rgba(0,0,0,0.2);
             }
-            td.unclicked:hover {
+            td.unclicked:hover, .button:hover {
                 background-color: #ccc;
                 border-color: rgba(0,0,0,0.5);
             }
-            td.unclicked:active, td.clicked {
+            td.unclicked:active, td.clicked, .button:active {
                 background-color: #aaa;
                 border-top: 2px solid rgba(0,0,0,0.2);
                 border-left: 2px solid rgba(0,0,0,0.2);
@@ -43,14 +55,21 @@
         </style>
     </head>
 <body>
+    <br/>
+    <div>
+        <span class="button" id="flagsBtn">
+            Flags: <span id="flagsLbl"></span>
+        </span>
+    </div>
+
+    <br/>
+    <hr/>
+
     <table id="mines" unselectable="on"></table>
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
     <script type="text/javascript">
         /* TODO:
-        * flag counter
-        * win
-        * lose
         * restart / settings
         *
         * probabilities + show/hide
@@ -129,6 +148,11 @@
                 },
                 didWin: function () {
                     return Object.keys(clicked).length === ((rows * cols) - mines);
+                },
+                countRemainingFlags: function () {
+                    return mines - Object.keys(flags).filter(function (f) {
+                        return flags[f] === FLAG.SET;
+                    }).length;
                 }
             };
         }
@@ -213,6 +237,13 @@
             }, won ? 100 : 510);
         }
 
+        function updateFlagsLbl() {
+            $('#flagsLbl').html(state.countRemainingFlags());
+            if (state.countRemainingFlags() === 0)
+                $('#flagsBtn').css('backgroundColor', '#4A4');
+        }
+        updateFlagsLbl();
+
         $(document).ready(function () {
             series(rows).forEach(function (r) {
                 var row = $('<tr></tr>');
@@ -235,6 +266,7 @@
                     else {
                         const flag = state.toggleFlag(mineid);
                         $(this).html(flag ? flag.icon : '');
+                        updateFlagsLbl();
                     }
                 }
             });
@@ -259,6 +291,17 @@
                         });
                     }
                 }
+            });
+
+            $('#flagsBtn').click(function () {
+               if (state.countRemainingFlags() === 0) {
+                   $('td', '#mines').each(function () {
+                       const id = $(this).attr('data-mineid');
+                       if (state.playing && !state.isClicked(id) && state.getFlag(id) !== FLAG.SET) {
+                           activate($(this));
+                       }
+                   });
+               }
             });
 
             $('#mines').on('contextmenu', false);
