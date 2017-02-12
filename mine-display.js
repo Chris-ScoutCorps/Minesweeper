@@ -13,13 +13,10 @@ const DISPLAY = (function init() {
             return;
 
         if (GAME.state.ending === GAME.ENDING.LOST) {
-            $('td', '#mines').each(function () {
-                const mineid = $(this).attr('data-mineid');
-                if (GAME.state.isMine(mineid)) {
-                    setTimeout(function () {
-                        $('td[data-mineid=' + mineid + ']').html('*');
-                    }, Math.floor(Math.random() * 500));
-                }
+            GAME.revealMines().forEach(function (mineid) {
+                setTimeout(function () {
+                    $('td[data-mineid=' + mineid + ']').html('*');
+                }, Math.floor(Math.random() * 500));
             });
 
             setTimeout(function () { alert('Defeat!'); }, 510);

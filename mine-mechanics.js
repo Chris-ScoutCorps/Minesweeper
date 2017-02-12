@@ -1,8 +1,9 @@
 const GAME = (function init() {
     const rows = 20;
     const cols = 30;
-    const mines = 80;
+    const mines = 8;
     var state;
+    var mineLocations;
 
     const FLAG = Object.freeze({
         SET: { icon: '>' },
@@ -27,6 +28,10 @@ const GAME = (function init() {
         }
     });
 
+    function isMine (id) {
+        return mineLocations[id] || false;
+    }
+
     function buildState() {
         function getRandomMine() {
             return MineID.get(
@@ -35,7 +40,7 @@ const GAME = (function init() {
             );
         }
 
-        var mineLocations = {};
+        mineLocations = {};
         var clicked = {};
         var flags = {};
 
@@ -48,9 +53,6 @@ const GAME = (function init() {
             rows: rows,
             cols: cols,
             mines: mines,
-            isMine: function (id) {
-                return mineLocations[id] || false;
-            },
             setClicked: function (id) {
                 clicked[id] = true;
             },
@@ -97,8 +99,18 @@ const GAME = (function init() {
         });
     }
 
+    function getAdjacentMineCount(id) {
+        return getAdjacent(id).filter(function (a) {
+            return isMine(a);
+        }).length;
+    }
+    function getAdjacentFlagCount(id) {
+        return getAdjacent(id).filter(function (a) {
+            return state.getFlag(a) === FLAG.SET;
+        }).length;
+    }
 
-    function activate(square) {
+    function activate(square, callback) {
         const id = square.attr('data-mineid');
 
         if (state.getFlag(id)) {
@@ -107,7 +119,7 @@ const GAME = (function init() {
 
         square.removeClass('unclicked');
         state.setClicked(id);
-        if (state.isMine(id)) {
+        if (isMine(id)) {
             square.addClass('mine');
             state.ending = ENDING.LOST;
         }
@@ -119,19 +131,19 @@ const GAME = (function init() {
             state.ending = ENDING.WON;
         }
 
-        const adjacent = getAdjacent(id);
-        const adjMines = adjacent.filter(function (a) {
-            return state.isMine(a);
-        }).length;
+        callback();
+        if (state.ending !== ENDING.NONE)
+            return;
 
+        const adjMines = getAdjacentMineCount(id);
         if (adjMines) {
             square.html(adjMines);
         }
         else {
             setTimeout(function () {
-                adjacent.forEach(function (a) {
+                getAdjacent(id).forEach(function (a) {
                     if (!state.isClicked(a)) {
-                        activate($('td[data-mineid=' + a + ']'));
+                        activate($('td[data-mineid=' + a + ']'), callback);
                     }
                 });
             }, 15);
@@ -144,6 +156,13 @@ const GAME = (function init() {
         MineID: MineID,
         state: state,
         getAdjacent: getAdjacent,
-        activate: activate
+        getAdjacentMineCount: getAdjacentMineCount,
+        getAdjacentFlagCount: getAdjacentFlagCount,
+        activate: activate,
+        revealMines: function () {
+            if (state.ending === ENDING.NONE)
+                throw "Game not over!";
+            return Object.keys(mineLocations);
+        }
     }
 })();

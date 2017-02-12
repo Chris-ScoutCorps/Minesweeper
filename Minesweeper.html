@@ -80,7 +80,6 @@
         * add icons
         */
 
-
         $(document).ready(function () {
             DISPLAY.renderGrid();
 
@@ -88,8 +87,7 @@
                 const mineid = $(this).attr('data-mineid');
                 if (!GAME.state.isClicked(mineid) && GAME.state.ending === GAME.ENDING.NONE) {
                     if (event.which === 1) {
-                        GAME.activate($(this));
-                        DISPLAY.activationUpdate();
+                        GAME.activate($(this), DISPLAY.activationUpdate);
                     }
                     else {
                         const flag = GAME.state.toggleFlag(mineid);
@@ -101,20 +99,13 @@
             $('td', '#mines').dblclick(function () {
                 const id = $(this).attr('data-mineid');
                 if (GAME.state.isClicked(id) && GAME.state.ending === GAME.ENDING.NONE) {
-                    const adjacent = GAME.getAdjacent(id);
-
-                    const adjMines = adjacent.filter(function (a) {
-                        return GAME.state.isMine(a);
-                    }).length;
-                    const adjFlags = adjacent.filter(function (a) {
-                        return GAME.state.getFlag(a) === GAME.FLAG.SET;
-                    }).length;
+                    const adjMines = GAME.getAdjacentMineCount(id);
+                    const adjFlags = GAME.getAdjacentFlagCount(id);
 
                     if (adjFlags && adjFlags === adjMines) {
-                        adjacent.forEach(function (a) {
+                        GAME.getAdjacent(id).forEach(function (a) {
                            if (!GAME.state.getFlag(a)) {
-                               GAME.activate($('td[data-mineid=' + a + ']'));
-                               DISPLAY.activationUpdate();
+                               GAME.activate($('td[data-mineid=' + a + ']'), DISPLAY.activationUpdate);
                            }
                         });
                     }
@@ -126,8 +117,7 @@
                    $('td', '#mines').each(function () {
                        const id = $(this).attr('data-mineid');
                        if (GAME.state.ending === GAME.ENDING.NONE && !GAME.state.isClicked(id) && GAME.state.getFlag(id) !== GAME.FLAG.SET) {
-                           GAME.activate($(this));
-                           DISPLAY.activationUpdate();
+                           GAME.activate($(this), DISPLAY.activationUpdate);
                        }
                    });
                }
