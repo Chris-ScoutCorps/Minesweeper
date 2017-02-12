@@ -68,6 +68,7 @@
     <table id="mines" unselectable="on"></table>
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+    <script type="text/javascript" src="mine-mechanics.js"></script>
     <script type="text/javascript">
         /* TODO:
         * restart / settings
@@ -77,17 +78,6 @@
         * color numbers
         * add icons
         */
-
-        const rows = 20;
-        const cols = 30;
-        const mines = 80;
-        var state;
-
-        const FLAG = Object.freeze({
-            SET: { icon: '>' },
-            QUESTION: { icon: '?' }
-        });
-
         function series(len) {
             var a = [];
             for (var i=0; i<len; i++)
@@ -95,136 +85,13 @@
             return a;
         }
 
-        const MineID = Object.freeze({
-            get: function (row, col) {
-                return row + '-' + col;
-            },
-            parse: function (id) {
-                var s = id.split('-');
-                return {
-                    row: parseInt(s[0]),
-                    col: parseInt(s[1])
-                }
-            }
-        });
-
-        function getRandomMine() {
-            return MineID.get(
-                Math.floor(Math.random() * rows),
-                Math.floor(Math.random() * cols)
-            );
-        }
-
-        function buildState() {
-            var mineLocations = {};
-            var clicked = {};
-            var flags = {};
-            var playing = true;
-
-            while (Object.keys(mineLocations).length < mines) { //hash to avoid dupes
-                mineLocations[getRandomMine()] = true;
-            }
-
-            return {
-                playing: playing,
-                isMine: function (id) {
-                    return mineLocations[id] || false;
-                },
-                setClicked: function (id) {
-                    clicked[id] = true;
-                },
-                isClicked: function (id) {
-                    return clicked[id] || false;
-                },
-                toggleFlag: function (id) {
-                    if (!flags[id]) flags[id] = FLAG.SET;
-                    else if (flags[id] === FLAG.SET) flags[id] = FLAG.QUESTION;
-                    else delete flags[id];
-
-                    return flags[id] || false;
-                },
-                getFlag: function (id) {
-                    return flags[id] || false;
-                },
-                didWin: function () {
-                    return Object.keys(clicked).length === ((rows * cols) - mines);
-                },
-                countRemainingFlags: function () {
-                    return mines - Object.keys(flags).filter(function (f) {
-                        return flags[f] === FLAG.SET;
-                    }).length;
-                }
-            };
-        }
-        state = buildState();
-
-        function getAdjacent(id) {
-            var p = MineID.parse(id);
-            return [
-                { row: p.row - 1, col: p.col },
-                { row: p.row - 1, col: p.col + 1 },
-                { row: p.row, col: p.col + 1 },
-                { row: p.row + 1, col: p.col + 1 },
-                { row: p.row + 1, col: p.col },
-                { row: p.row + 1, col: p.col - 1 },
-                { row: p.row, col: p.col - 1 },
-                { row: p.row - 1, col: p.col - 1 }
-            ].filter(function (x) {
-               return x.row >= 0 && x.col >= 0 && x.row < rows && x.col < cols;
-            }).map(function (a) {
-                return MineID.get(a.row, a.col);
-            });
-        }
-        
-        function activate(square) {
-            const id = square.attr('data-mineid');
-
-            if (state.getFlag(id)) {
-                return;
-            }
-
-            square.removeClass('unclicked');
-            state.setClicked(id);
-            if (state.isMine(id)) {
-                square.addClass('mine');
-                displayEnding(false);
-                return;
-            }
-            else {
-                square.addClass('clicked');
-            }
-
-            if (state.didWin()) {
-                displayEnding(true);
-                return;
-            }
-
-            const adjacent = getAdjacent(id);
-            const adjMines = adjacent.filter(function (a) {
-                return state.isMine(a);
-            }).length;
-
-            if (adjMines) {
-                square.html(adjMines);
-            }
-            else {
-                setTimeout(function () {
-                    adjacent.forEach(function (a) {
-                        if (!state.isClicked(a)) {
-                            activate($('td[data-mineid=' + a + ']'));
-                        }
-                    });
-                }, 15);
-            }
-        }
-
         function displayEnding(won) {
-            state.playing = false;
+            GAME.STATE.playing = false;
 
             if (!won) {
                 $('td', '#mines').each(function () {
                     const mineid = $(this).attr('data-mineid');
-                    if (state.isMine(mineid)) {
+                    if (GAME.STATE.isMine(mineid)) {
                         setTimeout(function () {
                             $('td[data-mineid=' + mineid + ']').html('*');
                         }, Math.floor(Math.random() * 500));
@@ -238,19 +105,21 @@
         }
 
         function updateFlagsLbl() {
-            $('#flagsLbl').html(state.countRemainingFlags());
-            if (state.countRemainingFlags() === 0)
+            $('#flagsLbl').html(GAME.STATE.countRemainingFlags());
+            if (GAME.STATE.countRemainingFlags() === 0)
                 $('#flagsBtn').css('backgroundColor', '#4A4');
+            else
+                $('#flagsBtn').css('backgroundColor', '');
         }
         updateFlagsLbl();
 
         $(document).ready(function () {
-            series(rows).forEach(function (r) {
+            series(GAME.STATE.rows).forEach(function (r) {
                 var row = $('<tr></tr>');
-                series(cols).forEach(function (c) {
+                series(GAME.STATE.cols).forEach(function (c) {
                    var col = $('<td></td>');
                    col.addClass('unclicked');
-                   var mid = MineID.get(r, c);
+                   var mid = GAME.MineID.get(r, c);
                    col.attr('data-mineid', mid);
                    row.append(col);
                 });
@@ -259,12 +128,12 @@
 
             $('td', '#mines').mouseup(function (event) {
                 const mineid = $(this).attr('data-mineid');
-                if (!state.isClicked(mineid) && state.playing) {
+                if (!GAME.STATE.isClicked(mineid) && GAME.STATE.playing) {
                     if (event.which === 1) {
-                        activate($(this));
+                        GAME.activate($(this));
                     }
                     else {
-                        const flag = state.toggleFlag(mineid);
+                        const flag = GAME.STATE.toggleFlag(mineid);
                         $(this).html(flag ? flag.icon : '');
                         updateFlagsLbl();
                     }
@@ -273,20 +142,20 @@
 
             $('td', '#mines').dblclick(function () {
                 const id = $(this).attr('data-mineid');
-                if (state.isClicked(id) && state.playing) {
-                    const adjacent = getAdjacent(id);
+                if (GAME.STATE.isClicked(id) && GAME.STATE.playing) {
+                    const adjacent = GAME.getAdjacent(id);
 
                     const adjMines = adjacent.filter(function (a) {
-                        return state.isMine(a);
+                        return GAME.STATE.isMine(a);
                     }).length;
                     const adjFlags = adjacent.filter(function (a) {
-                        return state.getFlag(a) === FLAG.SET;
+                        return GAME.STATE.getFlag(a) === GAME.FLAG.SET;
                     }).length;
 
                     if (adjFlags && adjFlags === adjMines) {
                         adjacent.forEach(function (a) {
-                           if (!state.getFlag(a)) {
-                               activate($('td[data-mineid=' + a + ']'));
+                           if (!GAME.STATE.getFlag(a)) {
+                               GAME.activate($('td[data-mineid=' + a + ']'));
                            }
                         });
                     }
@@ -294,11 +163,11 @@
             });
 
             $('#flagsBtn').click(function () {
-               if (state.countRemainingFlags() === 0) {
+               if (GAME.STATE.countRemainingFlags() === 0) {
                    $('td', '#mines').each(function () {
                        const id = $(this).attr('data-mineid');
-                       if (state.playing && !state.isClicked(id) && state.getFlag(id) !== FLAG.SET) {
-                           activate($(this));
+                       if (GAME.STATE.playing && !GAME.STATE.isClicked(id) && GAME.STATE.getFlag(id) !== GAME.FLAG.SET) {
+                           GAME.activate($(this));
                        }
                    });
                }
