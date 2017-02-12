@@ -1,8 +1,13 @@
 const AUTOPLAY = (function () {
+    function getActivationCallback(id) {
+        return function () {
+            DISPLAY.activationUpdate();
+            DISPLAY.highlight(id);
+        };
+    }
     function activate(id) {
         const square = $('td[data-mineid=' + id + ']');
-        GAME.activate(square, DISPLAY.activationUpdate);
-        DISPLAY.highlight(id);
+        GAME.activate(square, getActivationCallback(id));
     }
     function flag(id) {
         var flag;
