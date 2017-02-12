@@ -2,6 +2,7 @@ const AUTOPLAY = (function () {
     function activate(id) {
         const square = $('td[data-mineid=' + id + ']');
         GAME.activate(square, DISPLAY.activationUpdate);
+        DISPLAY.highlight(id);
     }
     function flag(id) {
         var flag;
@@ -10,6 +11,7 @@ const AUTOPLAY = (function () {
             const square = $('td[data-mineid=' + id + ']');
             DISPLAY.updateFlagLbl(square, flag);
         } while (flag !== GAME.FLAG.SET);
+        DISPLAY.highlight(id);
     }
 
     function iterateGrid(f) {
@@ -22,6 +24,8 @@ const AUTOPLAY = (function () {
     const placeObviousFlags = {
         name: 'Place Obvious Flags',
         doIt: function() {
+            DISPLAY.clearHighlight();
+
             var placed = 0;
 
             iterateGrid(function (id) {
@@ -50,6 +54,8 @@ const AUTOPLAY = (function () {
     const clearObviousSafeSpaces = {
         name: 'Clear Obvious Safe Spaces',
         doIt: function() {
+            DISPLAY.clearHighlight();
+
             var cleared = 0;
 
             this.tried = true;
@@ -62,6 +68,8 @@ const AUTOPLAY = (function () {
     const guess = {
         name: 'Take A Wild Guess',
         doIt: function() {
+            DISPLAY.clearHighlight();
+
             const id = GAME.MineID.get(
                 Math.floor(Math.random() * GAME.state.rows),
                 Math.floor(Math.random() * GAME.state.cols)
@@ -84,6 +92,7 @@ const AUTOPLAY = (function () {
     return {
         next: next,
         registerHumanAction: function () {
+            DISPLAY.clearHighlight();
             placeObviousFlags.tried = false;
             clearObviousSafeSpaces.tried = false;
         }

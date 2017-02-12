@@ -59,9 +59,19 @@ const DISPLAY = (function init() {
         updateFlagsCountLbl();
     }
 
+    function highlight(mineid) {
+        $('td[data-mineid=' + mineid + ']').addClass('highlight');
+    }
+
+    function clearHighlight() {
+        $('.highlight').removeClass('highlight');
+    }
+
     return {
         activationUpdate: activationUpdate,
         updateFlagLbl: updateFlagLbl,
-        renderGrid: renderGrid
+        renderGrid: renderGrid,
+        highlight: highlight,
+        clearHighlight: clearHighlight
     };
 })();
