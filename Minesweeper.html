@@ -60,6 +60,9 @@
         <span class="button" id="flagsBtn">
             Flags: <span id="flagsLbl"></span>
         </span>
+        <span class="button" id="robotButton">
+            Robot: <span id="robotLbl"></span>
+        </span>
     </div>
 
     <br/>
@@ -70,6 +73,7 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
     <script type="text/javascript" src="mine-mechanics.js"></script>
     <script type="text/javascript" src="mine-display.js"></script>
+    <script type="text/javascript" src="mine-autoplay.js"></script>
     <script type="text/javascript">
         /* TODO:
         * restart / settings
@@ -80,6 +84,16 @@
         * add icons
         */
 
+        $('#robotLbl').html(AUTOPLAY.next().name);
+
+        function activate(square) {
+            GAME.activate(square, function () {
+                DISPLAY.activationUpdate();
+                AUTOPLAY.registerHumanAction();
+                $('#robotLbl').html(AUTOPLAY.next().name);
+            });
+        }
+
         $(document).ready(function () {
             DISPLAY.renderGrid();
 
@@ -87,11 +101,12 @@
                 const mineid = $(this).attr('data-mineid');
                 if (!GAME.state.isClicked(mineid) && GAME.state.ending === GAME.ENDING.NONE) {
                     if (event.which === 1) {
-                        GAME.activate($(this), DISPLAY.activationUpdate);
+                        activate($(this));
                     }
                     else {
                         const flag = GAME.state.toggleFlag(mineid);
                         DISPLAY.updateFlagLbl($(this), flag);
+                        AUTOPLAY.registerHumanAction();
                     }
                 }
             });
@@ -105,7 +120,7 @@
                     if (adjFlags && adjFlags === adjMines) {
                         GAME.getAdjacent(id).forEach(function (a) {
                            if (!GAME.state.getFlag(a)) {
-                               GAME.activate($('td[data-mineid=' + a + ']'), DISPLAY.activationUpdate);
+                               activate($('td[data-mineid=' + a + ']'));
                            }
                         });
                     }
@@ -117,10 +132,15 @@
                    $('td', '#mines').each(function () {
                        const id = $(this).attr('data-mineid');
                        if (GAME.state.ending === GAME.ENDING.NONE && !GAME.state.isClicked(id) && GAME.state.getFlag(id) !== GAME.FLAG.SET) {
-                           GAME.activate($(this), DISPLAY.activationUpdate);
+                           activate($(this));
                        }
                    });
                }
+            });
+
+            $('#robotButton').click(function () {
+                AUTOPLAY.next().doIt();
+                $('#robotLbl').html(AUTOPLAY.next().name);
             });
 
             $('#mines').on('contextmenu', false);

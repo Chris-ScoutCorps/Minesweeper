@@ -1,7 +1,7 @@
 const GAME = (function init() {
     const rows = 20;
     const cols = 30;
-    const mines = 8;
+    const mines = 80;
     var state;
     var mineLocations;
 
