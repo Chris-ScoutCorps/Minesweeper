@@ -71,15 +71,22 @@ const AUTOPLAY = (function () {
     };
 
     const guess = {
-        name: 'Take A Wild Guess',
+        name: 'Take A Guess',
         doIt: function() {
             DISPLAY.clearHighlight();
 
-            const id = GAME.MineID.get(
-                Math.floor(Math.random() * GAME.state.rows),
-                Math.floor(Math.random() * GAME.state.cols)
-            );
-            activate(id);
+            var probabilities = [];
+            iterateGrid(function (id) {
+                if (!GAME.state.isClicked(id) && !GAME.state.getFlag(id)) {
+                    probabilities.push({ id: id, p: 0 }); //TODO: actually try probabilities
+                }
+            });
+            probabilities.sort(function (a,b) {
+               return a.p - b.p;
+            });
+
+            console.log(probabilities)
+            activate(probabilities[0].id);
 
             placeObviousFlags.tried = false;
             clearObviousSafeSpaces.tried = false;
