@@ -30,7 +30,6 @@ const AUTOPLAY = (function () {
         name: 'Place Obvious Flags',
         doIt: function() {
             DISPLAY.clearHighlight();
-
             var placed = 0;
 
             iterateGrid(function (id) {
@@ -58,10 +57,23 @@ const AUTOPLAY = (function () {
 
     const clearObviousSafeSpaces = {
         name: 'Clear Obvious Safe Spaces',
+        cleared: {},
         doIt: function() {
             DISPLAY.clearHighlight();
-
             var cleared = 0;
+            const me = this;
+
+            iterateGrid(function (id) {
+                if (GAME.state.isClicked(id) && !me.cleared[id]) {
+                    const adjMines = GAME.getAdjacentMineCount(id);
+                    const adjFlags = GAME.getAdjacentFlagCount(id);
+                    if (adjFlags === adjMines) {
+                        GAME.activateSpecial(id, getActivationCallback(id));
+                        cleared++;
+                        me.cleared[id] = true;
+                    }
+                }
+            });
 
             this.tried = true;
             if (cleared)
@@ -85,7 +97,6 @@ const AUTOPLAY = (function () {
                return a.p - b.p;
             });
 
-            console.log(probabilities)
             activate(probabilities[0].id);
 
             placeObviousFlags.tried = false;
