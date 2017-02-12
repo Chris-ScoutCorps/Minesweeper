@@ -3,11 +3,42 @@ const AUTOPLAY = (function () {
         const square = $('td[data-mineid=' + id + ']');
         GAME.activate(square, DISPLAY.activationUpdate);
     }
+    function flag(id) {
+        var flag;
+        do {
+            flag = GAME.state.toggleFlag(id);
+            const square = $('td[data-mineid=' + id + ']');
+            DISPLAY.updateFlagLbl(square, flag);
+        } while (flag !== GAME.FLAG.SET);
+    }
+
+    function iterateGrid(f) {
+        $('td', '#mines').each(function () {
+            const mineid = $(this).attr('data-mineid');
+            f(mineid);
+        });
+    }
 
     const placeObviousFlags = {
         name: 'Place Obvious Flags',
         doIt: function() {
             var placed = 0;
+
+            iterateGrid(function (id) {
+                const adjFresh = GAME.getAdjacent(id).filter(function (a) {
+                    return !GAME.state.isClicked(a) && GAME.state.getFlag(a) !== GAME.FLAG.SET;
+                });
+                if (adjFresh.length) {
+                    const adjMines = GAME.getAdjacentMineCount(id);
+                    const adjFlags = GAME.getAdjacentFlagCount(id);
+                    if (adjFresh.length === adjMines - adjFlags) {
+                        adjFresh.forEach(function (a) {
+                            flag(a);
+                            placed++;
+                        });
+                    }
+                }
+            });
 
             this.tried = true;
             if (placed)
