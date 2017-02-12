@@ -150,6 +150,21 @@ const GAME = (function init() {
         }
     }
 
+    function activateSpecial(id, callback) {
+        if (state.isClicked(id) && state.ending === ENDING.NONE) {
+            const adjMines = getAdjacentMineCount(id);
+            const adjFlags = getAdjacentFlagCount(id);
+
+            if (adjFlags && adjFlags === adjMines) {
+                getAdjacent(id).forEach(function (a) {
+                    if (!state.getFlag(a)) {
+                        activate($('td[data-mineid=' + a + ']'), callback);
+                    }
+                });
+            }
+        }
+    }
+
     return {
         FLAG: FLAG,
         ENDING: ENDING,
@@ -159,6 +174,7 @@ const GAME = (function init() {
         getAdjacentMineCount: getAdjacentMineCount,
         getAdjacentFlagCount: getAdjacentFlagCount,
         activate: activate,
+        activateSpecial: activateSpecial,
         revealMines: function () {
             if (state.ending === ENDING.NONE)
                 throw "Game not over!";

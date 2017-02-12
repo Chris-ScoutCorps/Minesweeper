@@ -36,12 +36,13 @@
 
         $('#robotLbl').html(AUTOPLAY.next().name);
 
+        function activationCallback() {
+            DISPLAY.activationUpdate();
+            AUTOPLAY.registerHumanAction();
+            $('#robotLbl').html(AUTOPLAY.next().name);
+        }
         function activate(square) {
-            GAME.activate(square, function () {
-                DISPLAY.activationUpdate();
-                AUTOPLAY.registerHumanAction();
-                $('#robotLbl').html(AUTOPLAY.next().name);
-            });
+            GAME.activate(square, activationCallback);
         }
 
         $(document).ready(function () {
@@ -62,19 +63,7 @@
             });
 
             $('td', '#mines').dblclick(function () {
-                const id = $(this).attr('data-mineid');
-                if (GAME.state.isClicked(id) && GAME.state.ending === GAME.ENDING.NONE) {
-                    const adjMines = GAME.getAdjacentMineCount(id);
-                    const adjFlags = GAME.getAdjacentFlagCount(id);
-
-                    if (adjFlags && adjFlags === adjMines) {
-                        GAME.getAdjacent(id).forEach(function (a) {
-                           if (!GAME.state.getFlag(a)) {
-                               activate($('td[data-mineid=' + a + ']'));
-                           }
-                        });
-                    }
-                }
+                GAME.activateSpecial($(this).attr('data-mineid'), activationCallback);
             });
 
             $('#flagsBtn').click(function () {
