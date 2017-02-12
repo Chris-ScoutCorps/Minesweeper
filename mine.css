@@ -1,0 +1,53 @@
+#mines {
+    cursor: default
+}
+
+.button {
+    padding: 8px;
+    margin: 8px;
+}
+
+td, .button {
+    border-radius: 5px;
+    -moz-border-radius: 5px;
+    -webkit-border-radius: 5px;
+    text-align: center;
+    vertical-align: middle;
+    font-weight: bold;
+    border-top: 1px solid rgba(0,0,0,0.2);
+    border-left: 1px solid rgba(0,0,0,0.2);
+    border-right: 2px solid rgba(0,0,0,0.2);
+    border-bottom: 2px solid rgba(0,0,0,0.2);
+}
+
+td {
+    width: 18px;
+    height: 18px;
+    font-size: 15px;
+    line-height: 15px;
+}
+td.unclicked {
+    background-color: #ddd;
+    border-top: 1px solid rgba(0,0,0,0.2);
+    border-left: 1px solid rgba(0,0,0,0.2);
+    border-right: 2px solid rgba(0,0,0,0.2);
+    border-bottom: 2px solid rgba(0,0,0,0.2);
+}
+td.unclicked:hover, .button:hover {
+    background-color: #ccc;
+    border-color: rgba(0,0,0,0.5);
+}
+td.unclicked:active, td.clicked, .button:active {
+    background-color: #aaa;
+    border-top: 2px solid rgba(0,0,0,0.2);
+    border-left: 2px solid rgba(0,0,0,0.2);
+    border-right: 1px solid rgba(0,0,0,0.2);
+    border-bottom: 1px solid rgba(0,0,0,0.2);
+}
+td.mine {
+    background-color: #D11;
+}
+
+td.highlight {
+    background-color: #FF4;
+}
