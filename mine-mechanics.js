@@ -8,6 +8,11 @@ const GAME = (function init() {
         SET: { icon: '>' },
         QUESTION: { icon: '?' }
     });
+    const ENDING = Object.freeze({
+        WON: true,
+        LOST: false,
+        NONE: null
+    });
 
     const MineID = Object.freeze({
         get: function (row, col) {
@@ -33,14 +38,13 @@ const GAME = (function init() {
         var mineLocations = {};
         var clicked = {};
         var flags = {};
-        var playing = true;
 
         while (Object.keys(mineLocations).length < mines) { //hash to avoid dupes
             mineLocations[getRandomMine()] = true;
         }
 
         return {
-            playing: playing,
+            ending: ENDING.NONE,
             rows: rows,
             cols: cols,
             mines: mines,
@@ -105,16 +109,14 @@ const GAME = (function init() {
         state.setClicked(id);
         if (state.isMine(id)) {
             square.addClass('mine');
-            displayEnding(false);
-            return;
+            state.ending = ENDING.LOST;
         }
         else {
             square.addClass('clicked');
         }
 
         if (state.didWin()) {
-            displayEnding(true);
-            return;
+            state.ending = ENDING.WON;
         }
 
         const adjacent = getAdjacent(id);
@@ -138,8 +140,9 @@ const GAME = (function init() {
 
     return {
         FLAG: FLAG,
+        ENDING: ENDING,
         MineID: MineID,
-        STATE: state,
+        state: state,
         getAdjacent: getAdjacent,
         activate: activate
     }
