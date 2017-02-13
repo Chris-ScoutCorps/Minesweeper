@@ -1,4 +1,6 @@
 const AUTOPLAY = (function () {
+    const DELAY = 50;
+
     function getActivationCallback(id) {
         return function () {
             DISPLAY.activationUpdate();
@@ -41,7 +43,7 @@ const AUTOPLAY = (function () {
                     const adjFlags = GAME.getAdjacentFlagCount(id);
                     if (adjFresh.length === adjMines - adjFlags) {
                         adjFresh.forEach(function (a) {
-                            flag(a);
+                            setTimeout(function () { flag(a) }, placed*DELAY);
                             placed++;
                         });
                     }
@@ -73,7 +75,10 @@ const AUTOPLAY = (function () {
                         const adjMines = GAME.getAdjacentMineCount(id);
                         const adjFlags = GAME.getAdjacentFlagCount(id);
                         if (adjFlags === adjMines) {
-                            GAME.activateSpecial(id, getActivationCallback(id));
+                            setTimeout(function () {
+                                GAME.activateSpecial(id, getActivationCallback(id));
+                            }, cleared*DELAY);
+
                             cleared++;
                             me.cleared[id] = true;
                         }
@@ -111,6 +116,17 @@ const AUTOPLAY = (function () {
     };
 
     function next() {
+        if (GAME.state.ending === GAME.ENDING.WON)
+            return {
+                name: "I'm a champ!",
+                doIt: function () { }
+            };
+        if (GAME.state.ending === GAME.ENDING.LOST)
+            return {
+                name: "I have let you down :-(",
+                doIt: function () { }
+            };
+
         if (!placeObviousFlags.tried)
             return placeObviousFlags;
         if (!clearObviousSafeSpaces.tried)
