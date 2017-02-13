@@ -65,12 +65,18 @@ const AUTOPLAY = (function () {
 
             iterateGrid(function (id) {
                 if (GAME.state.isClicked(id) && !me.cleared[id]) {
-                    const adjMines = GAME.getAdjacentMineCount(id);
-                    const adjFlags = GAME.getAdjacentFlagCount(id);
-                    if (adjFlags === adjMines) {
-                        GAME.activateSpecial(id, getActivationCallback(id));
-                        cleared++;
-                        me.cleared[id] = true;
+
+                    const adjFresh = GAME.getAdjacent(id).filter(function (a) {
+                        return !GAME.state.isClicked(a) && GAME.state.getFlag(a) !== GAME.FLAG.SET;
+                    });
+                    if (adjFresh.length) {
+                        const adjMines = GAME.getAdjacentMineCount(id);
+                        const adjFlags = GAME.getAdjacentFlagCount(id);
+                        if (adjFlags === adjMines) {
+                            GAME.activateSpecial(id, getActivationCallback(id));
+                            cleared++;
+                            me.cleared[id] = true;
+                        }
                     }
                 }
             });
