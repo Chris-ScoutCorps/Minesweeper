@@ -173,12 +173,12 @@ const GAME = (function init() {
         }
     }
 
-    function activateAll() {
+    function activateAll(callback) {
         if (state.countRemainingFlags() === 0) {
             $('td', '#mines').each(function () {
                 const id = $(this).attr('data-mineid');
                 if (state.ending === ENDING.NONE && !state.isClicked(id) && state.getFlag(id) !== FLAG.SET) {
-                    activate($(this));
+                    activate($(this), callback);
                 }
             });
         }

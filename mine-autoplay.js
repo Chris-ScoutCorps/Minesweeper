@@ -115,6 +115,18 @@ const AUTOPLAY = (function () {
         }
     };
 
+    const finishHim = {
+        name: 'FINISH HIM',
+        doIt: function() {
+            DISPLAY.clearHighlight();
+
+            GAME.activateAll(function () {
+                DISPLAY.activationUpdate();
+                DISPLAY.highlightFlagsBtn();
+            });
+        }
+    };
+
     function next() {
         if (GAME.state.ending === GAME.ENDING.WON)
             return {
@@ -126,6 +138,10 @@ const AUTOPLAY = (function () {
                 name: "I have let you down :-(",
                 doIt: function () { }
             };
+
+        if (GAME.state.countRemainingFlags() === 0) {
+            return finishHim;
+        }
 
         if (!placeObviousFlags.tried)
             return placeObviousFlags;

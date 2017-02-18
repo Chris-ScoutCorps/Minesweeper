@@ -48,6 +48,6 @@ td.mine {
     background-color: #D11;
 }
 
-td.highlight {
-    background-color: #FF4;
+.highlight {
+    background-color: #FF4 !important;
 }

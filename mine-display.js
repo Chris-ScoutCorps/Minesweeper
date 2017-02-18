@@ -63,6 +63,10 @@ const DISPLAY = (function init() {
         $('td[data-mineid=' + mineid + ']').addClass('highlight');
     }
 
+    function highlightFlagsBtn() {
+        $('#flagsBtn').addClass('highlight');
+    }
+
     function clearHighlight() {
         $('.highlight').removeClass('highlight');
     }
@@ -72,6 +76,7 @@ const DISPLAY = (function init() {
         updateFlagLbl: updateFlagLbl,
         renderGrid: renderGrid,
         highlight: highlight,
+        highlightFlagsBtn: highlightFlagsBtn,
         clearHighlight: clearHighlight
     };
 })();
