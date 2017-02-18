@@ -4,6 +4,7 @@ const GAME = (function init() {
     const mines = 80;
     var state;
     var mineLocations;
+    var adjMineCountMemoize;
 
     const FLAG = Object.freeze({
         SET: { icon: '>' },
@@ -40,6 +41,7 @@ const GAME = (function init() {
             );
         }
 
+        adjMineCountMemoize = {};
         mineLocations = {};
         var clicked = {};
         var flags = {};
@@ -103,9 +105,12 @@ const GAME = (function init() {
     }
 
     function getAdjacentMineCount(id) {
-        return getAdjacent(id).filter(function (a) {
-            return isMine(a);
-        }).length;
+        if (adjMineCountMemoize[id] == null) {
+            adjMineCountMemoize[id] = getAdjacent(id).filter(function (a) {
+                return isMine(a);
+            }).length;
+        }
+        return adjMineCountMemoize[id];
     }
     function getAdjacentFlagCount(id) {
         return getAdjacent(id).filter(function (a) {
