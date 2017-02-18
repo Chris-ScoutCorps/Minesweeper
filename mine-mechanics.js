@@ -173,6 +173,17 @@ const GAME = (function init() {
         }
     }
 
+    function activateAll() {
+        if (state.countRemainingFlags() === 0) {
+            $('td', '#mines').each(function () {
+                const id = $(this).attr('data-mineid');
+                if (state.ending === ENDING.NONE && !state.isClicked(id) && state.getFlag(id) !== FLAG.SET) {
+                    activate($(this));
+                }
+            });
+        }
+    }
+
     return {
         FLAG: FLAG,
         ENDING: ENDING,
@@ -183,6 +194,7 @@ const GAME = (function init() {
         getAdjacentFlagCount: getAdjacentFlagCount,
         activate: activate,
         activateSpecial: activateSpecial,
+        activateAll: activateAll,
         revealMines: function () {
             if (state.ending === ENDING.NONE)
                 throw "Game not over!";

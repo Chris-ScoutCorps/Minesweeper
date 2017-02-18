@@ -67,14 +67,7 @@
             });
 
             $('#flagsBtn').click(function () {
-               if (GAME.state.countRemainingFlags() === 0) {
-                   $('td', '#mines').each(function () {
-                       const id = $(this).attr('data-mineid');
-                       if (GAME.state.ending === GAME.ENDING.NONE && !GAME.state.isClicked(id) && GAME.state.getFlag(id) !== GAME.FLAG.SET) {
-                           activate($(this));
-                       }
-                   });
-               }
+                GAME.activateAll(DISPLAY.activationUpdate);
             });
 
             $('#robotButton').click(function () {
