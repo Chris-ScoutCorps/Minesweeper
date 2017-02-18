@@ -135,6 +135,15 @@ const AUTOPLAY = (function () {
             }
         });
     }
+    function distFromCenter(mineid) {
+        const cr = GAME.state.rows / 2;
+        const cc = GAME.state.cols / 2;
+        const mine = GAME.MineID.parse(mineid);
+        return Math.sqrt(
+            (mine.row - cr) * (mine.row - cr),
+            (mine.col - cc) * (mine.col - cc)
+        );
+    }
 
     const guess = {
         name: 'Take A Guess',
@@ -146,14 +155,22 @@ const AUTOPLAY = (function () {
             assignProbabilitiesFromDefault(probabilities);
 
             probabilities = Object.keys(probabilities).map(function (k) {
-                return { id: k, p: probabilities[k], value: GAME.getAdjacent(k).filter(isNaked).length };
+                return {
+                    id: k,
+                    p: probabilities[k],
+                    value: GAME.getAdjacent(k).filter(isNaked).length,
+                    distFromCenter: distFromCenter(k)
+                };
             });
 
-            //lowest probability - use "what will reveal the most" as tie-breaker
+            //lowest probability - use "what will reveal the most" as tie-breaker, closest to center as next tie-breaker
             probabilities.sort(function (a,b) {
-               return a.p === b.p ? (b.value - a.value) : (a.p - b.p);
+                if (a.p !== b.p)
+                    return a.p - b.p;
+                if (a.value !== b.value)
+                    return b.value - a.value;
+                return a.distFromCenter - b.distFromCenter;
             });
-console.log(probabilities)
 
             activate(probabilities[0].id);
 
