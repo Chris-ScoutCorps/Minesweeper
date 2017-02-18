@@ -97,20 +97,63 @@ const AUTOPLAY = (function () {
         tried: true
     };
 
+    function isNaked(id) {
+        return !GAME.state.isClicked(id) && !GAME.state.getFlag(id);
+    }
+    function assignProbabilitiesFromRevealedNumbers(probabilities) {
+        iterateGrid(function (id) {
+            if (GAME.state.isClicked(id)) {
+                const adjMines = GAME.getAdjacentMineCount(id);
+                if (adjMines) {
+                    const adjFlags = GAME.getAdjacentFlagCount(id);
+                    const adjNaked = GAME.getAdjacent(id).filter(isNaked);
+                    const unknownMines = adjMines - adjFlags;
+
+                    adjNaked.forEach(function (a) {
+                        if (!unknownMines) {
+                            probabilities[a] = 0;
+                        }
+                        else if (probabilities[a] !== 0) { //if it's clear, don't F with it. otherwise take the highest probability
+                            probabilities[a] = Math.max(unknownMines / adjNaked.length, probabilities[a] || 0);
+                        }
+                    });
+                }
+            }
+        });
+    }
+    function assignProbabilitiesFromDefault(probabilities) {
+        var naked = 0;
+        iterateGrid(function (id) {
+            if (isNaked(id)) {
+                naked++;
+            }
+        });
+        const remaining = GAME.state.countRemainingFlags();
+        iterateGrid(function (id) {
+            if (isNaked(id) && probabilities[id] == null) {
+                probabilities[id] = remaining / naked;
+            }
+        });
+    }
+
     const guess = {
         name: 'Take A Guess',
         doIt: function() {
             DISPLAY.clearHighlight();
 
-            var probabilities = [];
-            iterateGrid(function (id) {
-                if (!GAME.state.isClicked(id) && !GAME.state.getFlag(id)) {
-                    probabilities.push({ id: id, p: 0 }); //TODO: actually try probabilities
-                }
+            var probabilities = {};
+            assignProbabilitiesFromRevealedNumbers(probabilities);
+            assignProbabilitiesFromDefault(probabilities);
+
+            probabilities = Object.keys(probabilities).map(function (k) {
+                return { id: k, p: probabilities[k], value: GAME.getAdjacent(k).filter(isNaked).length };
             });
+
+            //lowest probability - use "what will reveal the most" as tie-breaker
             probabilities.sort(function (a,b) {
-               return a.p - b.p;
+               return a.p === b.p ? (b.value - a.value) : (a.p - b.p);
             });
+console.log(probabilities)
 
             activate(probabilities[0].id);
 

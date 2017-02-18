@@ -78,9 +78,6 @@ const GAME = (function init() {
                 return mines - Object.keys(flags).filter(function (f) {
                         return flags[f] === FLAG.SET;
                     }).length;
-            },
-            countNakedSquares: function () {
-                return (rows*cols) - (Object.keys(clicked).length + Object.keys(flags).length)
             }
         };
     }
