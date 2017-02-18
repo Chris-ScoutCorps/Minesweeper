@@ -86,9 +86,13 @@ const AUTOPLAY = (function () {
                 }
             });
 
-            this.tried = true;
-            if (cleared)
+            if (cleared) {
                 placeObviousFlags.tried = false;
+                this.tried = false;
+            }
+            else {
+                this.tried = true;
+            }
         },
         tried: true
     };
